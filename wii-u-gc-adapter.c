@@ -37,7 +37,7 @@
 
 #define MAX_FF_EVENTS 4
 
-const int BUTTON_OFFSET_VALUES[16] = {
+const int BUTTON_OFFSET_VALUES_DEFAULT[16] = {
    BTN_START,
    BTN_TR2,
    BTN_TR,
@@ -54,6 +54,25 @@ const int BUTTON_OFFSET_VALUES[16] = {
    BTN_DPAD_RIGHT,
    BTN_DPAD_DOWN,
    BTN_DPAD_UP,
+};
+
+const int BUTTON_OFFSET_VALUES_RIVALS2[16] = {
+   BTN_START,           // Start
+   BTN_TL,              // Z
+   BTN_TR,              // R Full Press
+   -1,                  // L Full Press
+   -1,
+   -1,
+   -1,
+   -1,
+   BTN_SOUTH,           // A
+   BTN_EAST,            // B
+   BTN_NORTH,           // Y
+   BTN_WEST,            // X
+   BTN_DPAD_LEFT,       // D-Pad Left
+   BTN_DPAD_RIGHT,      // D-Pad Right
+   BTN_DPAD_DOWN,       // D-Pad Down
+   BTN_DPAD_UP,         // D-Pad Up
 };
 
 const int AXIS_OFFSET_VALUES[6] = {
@@ -99,6 +118,8 @@ struct adapter
 };
 
 static bool raw_mode;
+
+static bool rivals2_mode;
 
 static volatile int quitting;
 
@@ -356,9 +377,10 @@ static void handle_payload(int i, struct ports *port, unsigned char *payload, st
 
    uint16_t btns = (uint16_t) payload[1] << 8 | (uint16_t) payload[2];
 
+   const int *button_offset_values = (rivals2_mode == true) ? BUTTON_OFFSET_VALUES_RIVALS2 : BUTTON_OFFSET_VALUES_DEFAULT;
    for (int j = 0; j < 16; j++)
    {
-      if (BUTTON_OFFSET_VALUES[j] == -1)
+      if (button_offset_values[j] == -1)
          continue;
 
       uint16_t mask = (1 << j);
@@ -367,7 +389,7 @@ static void handle_payload(int i, struct ports *port, unsigned char *payload, st
       if ((port->buttons & mask) != pressed)
       {
          events[e_count].type = EV_KEY;
-         events[e_count].code = BUTTON_OFFSET_VALUES[j];
+         events[e_count].code = button_offset_values[j];
          events[e_count].value = (pressed == 0) ? 0 : 1;
          e_count++;
          port->buttons &= ~mask;
@@ -640,6 +662,7 @@ static struct option options[] = {
    { "raw", no_argument, 0, 'r' },
    { "vendor", required_argument, 0, opt_vendor },
    { "product", required_argument, 0, opt_product },
+   {"rivals2", no_argument, 0, 1002 },
    { 0, 0, 0, 0 },
 };
 
@@ -658,18 +681,22 @@ int main(int argc, char *argv[])
          break;
 
       switch (c) {
-      case 'r':
-         fprintf(stderr, "raw mode enabled\n");
-         raw_mode = true;
-         break;
-      case opt_vendor:
-         vendor_id = parse_id(optarg);
-         fprintf(stderr, "vendor_id = %#06x\n", vendor_id);
-         break;
-      case opt_product:
-         product_id = parse_id(optarg);
-         fprintf(stderr, "product_id = %#06x\n", product_id);
-         break;
+         case 'r':
+            fprintf(stderr, "raw mode enabled\n");
+            raw_mode = true;
+            break;
+         case opt_vendor:
+            vendor_id = parse_id(optarg);
+            fprintf(stderr, "vendor_id = %#06x\n", vendor_id);
+            break;
+         case opt_product:
+            product_id = parse_id(optarg);
+            fprintf(stderr, "product_id = %#06x\n", product_id);
+            break;
+         case 1002:
+            fprintf(stderr, "Rivals 2 button map enabled\n");
+            rivals2_mode = true;
+            break;
       }
    }
 
