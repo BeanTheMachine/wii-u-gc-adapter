@@ -3,6 +3,12 @@ wii-u-gc-adapter
 
 Tool for using the Wii U GameCube Adapter on Linux
 
+Forked from https://github.com/ToadKing/wii-u-gc-adapter
+
+I wanted to modify the button mappings to better match the Rivals of Aether 2
+in-game button prompts on Linux, which I've done in the appropriately named
+branch. I may generalize this process, at which point I will merge into master and update this README.
+
 Prerequisites
 -------------
 * libudev
